@@ -1,0 +1,201 @@
+Berles.cs
+using System;
+
+namespace OfficeSphereConsoleApp
+{
+    // Egy bérlést reprezentáló osztály
+    public class Berles
+    {
+        public int Uid { get; set; }              // Bérlő azonosítója
+        public int OfficeId { get; set; }         // Iroda azonosítója
+        public DateTime StartDate { get; set; }   // Bérlés kezdete
+        public DateTime EndDate { get; set; }     // Bérlés vége
+        public decimal DailyRate { get; set; }    // Napi díj (euró)
+        public string Name { get; set; }          // Iroda neve
+        public string Location { get; set; }      // Iroda helyszíne (város, ország)
+
+        // Számított tulajdonság: bérlés időtartama napokban
+        public int DurationInDays => (EndDate - StartDate).Days + 1;
+
+        // Számított tulajdonság: teljes ár = napok száma × napi díj
+        public decimal TotalPrice => DurationInDays * DailyRate;
+    }
+}
+
+PROGRAM.CS
+using OfficeSphereConsoleApp;
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+
+class Program
+{
+    // Lista, amiben a bérlések tárolódnak
+    static List<Berles> berlesek = new List<Berles>();
+
+    static void Main(string[] args)
+    {
+        string filePath = "office_rentals_2024.csv";  // Bemeneti fájl neve
+
+        // Ellenőrizzük, hogy létezik-e a fájl
+        if (!File.Exists(filePath))
+        {
+            Console.WriteLine("Nem található a fájl: " + filePath);
+            return;
+        }
+
+        // Fájl beolvasása
+        using (var reader = new StreamReader(filePath))
+        {
+            bool isFirstLine = true; // Első sor a fejléc, azt átugorjuk
+
+            while (!reader.EndOfStream)
+            {
+                string line = reader.ReadLine(); // Sor beolvasása
+
+                if (isFirstLine)
+                {
+                    isFirstLine = false;
+                    continue; // Fejléc átugrása
+                }
+
+                string[] parts = line.Split(','); // Sor darabolása vesszők mentén
+
+                // Új Berles objektum létrehozása a darabolt adatokból
+                Berles b = new Berles
+                {
+                    Uid = int.Parse(parts[0]),
+                    OfficeId = int.Parse(parts[1]),
+                    StartDate = DateTime.ParseExact(parts[2], "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    EndDate = DateTime.ParseExact(parts[3], "yyyy-MM-dd", CultureInfo.InvariantCulture),
+                    DailyRate = decimal.Parse(parts[4], CultureInfo.InvariantCulture),
+                    Name = parts[5],
+                    Location = parts[6]
+                };
+
+                // Objektum hozzáadása a listához
+                berlesek.Add(b);
+            }
+        }
+
+        // Összes bérlés számának kiírása
+        Console.WriteLine("Adatok beolvasva. Összes bérlés: " + berlesek.Count);
+
+        // Felhasználótól hónap bekérése
+        Console.Write("\nAdd meg a hónap számát (1-12): ");
+        if (int.TryParse(Console.ReadLine(), out int honap) && honap >= 1 && honap <= 12)
+        {
+            DateTime honapEleje = new DateTime(2024, honap, 1);                       // Hónap első napja
+            DateTime honapVege = honapEleje.AddMonths(1).AddDays(-1);                // Hónap utolsó napja
+
+            decimal osszBevetel = 0;
+
+            foreach (var b in berlesek)
+            {
+                // Átfedés kiszámítása a hónappal
+                DateTime kezdet = b.StartDate > honapEleje ? b.StartDate : honapEleje;
+                DateTime vege = b.EndDate < honapVege ? b.EndDate : honapVege;
+
+                if (kezdet <= vege)
+                {
+                    int napok = (vege - kezdet).Days + 1;
+                    osszBevetel += napok * b.DailyRate;
+                }
+            }
+
+            Console.WriteLine($"A {honap}. hónap bevétele: {osszBevetel:0.00} euró");
+        }
+        else
+        {
+            Console.WriteLine("Érvénytelen hónap!");
+        }
+
+        // Éves bevétel összesítése
+        decimal evesBevetel = 0;
+        foreach (var b in berlesek)
+        {
+            evesBevetel += b.TotalPrice;
+        }
+
+        Console.WriteLine($"\nTeljes éves bevétel (2024): {evesBevetel:0.00} euró");
+
+        // Legdrágább bérlés megkeresése
+        var legdragabb = berlesek.MaxBy(b => b.TotalPrice);
+        if (legdragabb != null)
+        {
+            Console.WriteLine("\nLegdrágább bérlés:");
+            Console.WriteLine($"Bérlő ID: {legdragabb.Uid}");
+            Console.WriteLine($"Iroda neve: {legdragabb.Name}");
+            Console.WriteLine($"Időtartam: {legdragabb.StartDate:yyyy-MM-dd} - {legdragabb.EndDate:yyyy-MM-dd}");
+            Console.WriteLine($"Teljes ár: {legdragabb.TotalPrice:0.00} euró");
+        }
+
+        // Különböző irodák száma (OfficeId alapján)
+        int kulonbozoIrodakSzama = berlesek
+            .Select(b => b.OfficeId)
+            .Distinct()
+            .Count();
+
+        Console.WriteLine($"\nKülönböző irodák száma: {kulonbozoIrodakSzama}");
+
+        // Legtöbbször bérelt iroda (név alapján)
+        var legtobbszorBerelt = berlesek
+            .GroupBy(b => b.Name)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+
+        if (legtobbszorBerelt != null)
+        {
+            Console.WriteLine("\nLeggyakrabban bérelt iroda:");
+            Console.WriteLine($"Név: {legtobbszorBerelt.Key}");
+            Console.WriteLine($"Bérlések száma: {legtobbszorBerelt.Count()}");
+        }
+
+        // Bérlések száma helyszínenként
+        Console.WriteLine("\nBérlések száma helyszínenként:");
+        var helyszinek = berlesek
+            .GroupBy(b => b.Location)
+            .OrderByDescending(g => g.Count());
+
+        foreach (var helyszin in helyszinek)
+        {
+            Console.WriteLine($"{helyszin.Key}: {helyszin.Count()} bérlés");
+        }
+
+        // Átlagos bérlési időtartam napban
+        double atlagosNapok = berlesek
+            .Select(b => (b.EndDate - b.StartDate).TotalDays + 1) // +1, mert kezdőnap is számít
+            .Average();
+
+        Console.WriteLine($"\nÁtlagos bérlési időtartam: {atlagosNapok:F2} nap");
+    }
+}
+
+___________________________________________________________
+Berles b = new Berles
+{
+    // Bérlő azonosítója (egész számként olvassuk be a CSV első mezőjéből)
+    Uid = int.Parse(parts[0]),
+
+    // Iroda azonosítója (második mező)
+    OfficeId = int.Parse(parts[1]),
+
+    // Bérlés kezdete (harmadik mező): "2024-03-15" formátumban, ezért ParseExact kell
+    StartDate = DateTime.ParseExact(parts[2], "yyyy-MM-dd", CultureInfo.InvariantCulture),
+
+    // Bérlés vége (negyedik mező): ugyanaz a formátum
+    EndDate = DateTime.ParseExact(parts[3], "yyyy-MM-dd", CultureInfo.InvariantCulture),
+
+    // Napi díj (ötödik mező): tizedes szám, lehet pl. "120.5", ez kulturálisan független értelmezés kell
+    DailyRate = decimal.Parse(parts[4], CultureInfo.InvariantCulture),
+
+    // Iroda neve (hatodik mező): pl. "Modern Space A"
+    Name = parts[5],
+
+    // Iroda helyszíne (hetedik mező): pl. "Berlin, Germany"
+    Location = parts[6]
+};
+Ez a rész tehát egy sor adatot alakít át egy Berles példánnyá, amelyet utána a berlesek listához adsz hozzá.
+
+Ha szeretnéd, készíthetek ehhez egy FromCsv(string csvLine) metódust a Berles osztályba, hogy tisztább legyen a főprogram. Kérsz ilyet?

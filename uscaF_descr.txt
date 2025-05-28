@@ -1,0 +1,418 @@
+1.ng new LuxusCars standalone=false
+2.ng add @ng-bootstrap/ng-bootstrap
+3.ng generate component components/CarListComponent
+4.car-list.component.ts - Létrehozunk egy Car nevű interfészt, hogy legyen egy pontos adatstruktúránk.
+***
+// Autó interfész, ami leírja, hogy milyen adatokat tartalmaz egy autó objektum
+import { Component } from '@angular/core';
+
+export interface Car {
+  id: number;
+  brand: string;
+  model: string;
+  licensePlate: string;
+  year: number;
+  dailyPrice: number;
+}
+
+@Component({
+  selector: 'app-car-list-component',
+  templateUrl: './car-list-component.component.html',
+  styleUrl: './car-list-component.component.css'
+})
+
+
+export class CarListComponentComponent {
+
+  cars: Car[] = [
+    { id: 1, brand: 'Toyota', model: 'Corolla', licensePlate: 'ABC-123', year: 2020, dailyPrice: 50 },
+    { id: 2, brand: 'Honda', model: 'Civic', licensePlate: 'XYZ-456', year: 2019, dailyPrice: 60 },
+    { id: 3, brand: 'Ford', model: 'Focus', licensePlate: 'LMN-789', year: 2021, dailyPrice: 55 },
+    { id: 4, brand: 'Chevrolet', model: 'Malibu', licensePlate: 'DEF-012', year: 2018, dailyPrice: 65 },
+    { id: 5, brand: 'Nissan', model: 'Altima', licensePlate: 'GHI-345', year: 2022, dailyPrice: 70 }
+  ];
+
+   constructor() { }
+ngOnInit(): void {
+  // Itt történhetne az adatok betöltése a szerverről, ha lenne backend API
+  // Például egy autókat lekérő szerviz segítségével:
+
+  // this.carService.getAllCars().subscribe((data: Car[]) => {
+  //   this.cars = data;
+  // });
+
+  // Fontos: a fenti kódhoz szükség lesz egy `CarService` osztályra és egy valódi backend végpontra is
+}
+}
+
+***
+5. car-list.component.html
+***
+<div class="table-wrapper">
+  <!-- Autók listája cím -->
+  <h2 class="mb-3 text-white">Autók listája</h2>
+
+   <!-- Átlátszó, középre igazított táblázat -->
+   <table class="car-table table table-hover text-white">
+    <thead>
+      <tr>
+        <th class="fw-bold">Márka</th>
+        <th class="fw-bold">Modell</th>
+        <th class="fw-bold">Rendszám</th>
+        <th class="fw-bold">Gyártási év</th>
+        <th class="fw-bold">Napi díj (Ft)</th>
+        <th class="fw-bold">Műveletek</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Soronkénti autóadatok megjelenítése -->
+      <tr *ngFor="let car of cars">
+        <td>{{ car.brand }}</td>
+        <td>{{ car.model }}</td>
+        <td>{{ car.licensePlate }}</td>
+        <td>{{ car.year }}</td>
+        <td>{{ car.dailyPrice }}</td>
+        <td>
+          <!-- Művelet gombok egységes színnel -->
+          <button class="btn me-1" [ngStyle]="{ 'background-color': '#72dd78', color: '#000' }">Módosítás</button>
+          <button class="btn me-1" [ngStyle]="{ 'background-color': '#72dd78', color: '#000' }">Törlés</button>
+          <button class="btn" [ngStyle]="{ 'background-color': '#72dd78', color: '#000' }">Új foglalás</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+
+***
+
+6. car-list-component.component.css
+***
+body, html {
+  height: 100%;
+  margin: 0;
+}
+
+.table-wrapper {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 1rem;
+  background: transparent;
+}
+
+.car-table {
+  background-color: rgba(255, 255, 255, 0.05); /* átlátszó fehér háttér */
+  width: auto;
+}
+
+.action-btn {
+  background-color: #72dd78;
+  color: #000;
+  margin-right: 0.25rem;
+}
+***
+7.Háttérkép beállítása 
+styles.css (vaggy app.component.css)
+***
+body {
+  background-image: url('assets/car.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+  min-height: 100vh;
+}
+
+***
+8. Útvonal beállítása
+src/app/app-routing.module.ts
+***
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+// Komponensek importálása, amiket az útvonalakhoz rendelünk
+import { CarListComponentComponent } from './car-list-component/car-list-component.component';
+import { BookingListComponentComponent } from './booking-list-component/booking-list-component.component';
+import { CarFormComponentComponent } from './car-form-component/car-form-component.component';
+import { BookingFormComponentComponent } from './booking-form-component/booking-form-component.component';
+
+// Itt definiáljuk az alkalmazás útvonalait
+const routes: Routes = [
+  // Alapértelmezett útvonal – ha a felhasználó csak a főcímet írja be, akkor az 'cars' oldalra irányítjuk át
+  { path: '', redirectTo: 'cars', pathMatch: 'full' },
+
+  // Autók listázása
+  { path: 'cars', component: CarListComponentComponent },
+
+  // Foglalások listázása
+  { path: 'bookings', component: BookingListComponentComponent },
+
+  // Új autó felvétele / módosítása
+  { path: 'car-form', component: CarFormComponentComponent },
+
+  // Új foglalás felvétele
+  { path: 'booking-form', component: BookingFormComponentComponent },
+];
+
+// Az útvonalakat regisztráljuk az Angular Router számára
+@NgModule({
+  imports: [RouterModule.forRoot(routes)], // Globális router inicializálása ezekkel az útvonalakkal
+  exports: [RouterModule] // Az útválasztó exportálása, hogy más modulok is használhassák
+})
+export class AppRoutingModule { }
+***
+
+9. GOMBOK funkcióinak implementálása
+car-list-component.component.ts
+***
+// ...
+
+export class CarListComponentComponent {
+  cars: Car[] = [
+    { id: 1, brand: 'Toyota', model: 'Corolla', licensePlate: 'ABC-123', year: 2020, dailyPrice: 50 },
+    { id: 2, brand: 'Honda', model: 'Civic', licensePlate: 'XYZ-456', year: 2019, dailyPrice: 60 },
+    { id: 3, brand: 'Ford', model: 'Focus', licensePlate: 'LMN-789', year: 2021, dailyPrice: 55 },
+    { id: 4, brand: 'Chevrolet', model: 'Malibu', licensePlate: 'DEF-012', year: 2018, dailyPrice: 65 },
+    { id: 5, brand: 'Nissan', model: 'Altima', licensePlate: 'GHI-345', year: 2022, dailyPrice: 70 }
+  ];
+
+  constructor() { }
+
+  ngOnInit(): void {
+    // Jelenleg nincs szükség inicializálásra, mert statikus adatokat használunk
+  }
+
+  // Egy adott autó törlése az autólista alapján
+  deleteCar(carId: number): void {
+    this.cars = this.cars.filter(car => car.id !== carId);
+  }
+
+  // Autó módosítása (ez most csak konzolra írja ki az ID-t)
+  editCar(carId: number): void {
+    console.log('Autó módosítása, ID:', carId);
+    // Később navigálhatunk a szerkesztő űrlaphoz
+  }
+
+  // Új foglalás indítása (csak konzolra írja ki az autó ID-ját)
+  bookCar(carId: number): void {
+    console.log('Új foglalás ehhez az autóhoz, ID:', carId);
+    // Később navigálhatunk a foglalási űrlaphoz
+  }
+}
+
+***
+10. HTML frissítése GOMBOK
+car-list-component.component.html
+***
+import { Component } from '@angular/core';
+
+export interface Car {
+  id: number;
+  brand: string;
+  model: string;
+  licensePlate: string;
+  year: number;
+  dailyPrice: number;
+}
+
+@Component({
+  selector: 'app-car-list-component',
+  templateUrl: './car-list-component.component.html',
+  styleUrl: './car-list-component.component.css'
+})
+
+
+export class CarListComponentComponent {
+
+  cars: Car[] = [
+    { id: 1, brand: 'Toyota', model: 'Corolla', licensePlate: 'ABC-123', year: 2020, dailyPrice: 50 },
+    { id: 2, brand: 'Honda', model: 'Civic', licensePlate: 'XYZ-456', year: 2019, dailyPrice: 60 },
+    { id: 3, brand: 'Ford', model: 'Focus', licensePlate: 'LMN-789', year: 2021, dailyPrice: 55 },
+    { id: 4, brand: 'Chevrolet', model: 'Malibu', licensePlate: 'DEF-012', year: 2018, dailyPrice: 65 },
+    { id: 5, brand: 'Nissan', model: 'Altima', licensePlate: 'GHI-345', year: 2022, dailyPrice: 70 }
+  ];
+
+   constructor() { }
+ngOnInit(): void {}
+  // Itt történhetne az adatok betöltése a szerverről, ha lenne backend API
+  // Például egy autókat lekérő szerviz segítségével:
+
+  // this.carService.getAllCars().subscribe((data: Car[]) => {
+  //   this.cars = data;
+  // });
+
+  // Fontos: a fenti kódhoz szükség lesz egy `CarService` osztályra és egy valódi backend végpontra is
+
+   // Egy adott autó törlése az autólista alapján
+  deleteCar(carId: number): void {
+    this.cars = this.cars.filter(car => car.id !== carId);
+  }
+
+  // Autó módosítása (ez most csak konzolra írja ki az ID-t)
+  editCar(carId: number): void {
+    console.log('Autó módosítása, ID:', carId);
+    // Később navigálhatunk a szerkesztő űrlaphoz
+  }
+
+  // Új foglalás indítása (csak konzolra írja ki az autó ID-ját)
+  bookCar(carId: number): void {
+    console.log('Új foglalás ehhez az autóhoz, ID:', carId);
+    // Később navigálhatunk a foglalási űrlaphoz
+}
+}
+
+***
+
+11. Gombfüggvények
+
+// ⬇️ Módosítás gomb eseménykezelője
+  editCar(id: number): void {
+    console.log(`Módosítás autó ID: ${id}`);
+    // Ide jönne a navigáció a szerkesztő űrlapra
+  }
+
+  // ⬇️ Törlés gomb eseménykezelője
+  deleteCar(id: number): void {
+    console.log(`Törlés autó ID: ${id}`);
+    // Egyszerű példa: törlés a listából
+    this.cars = this.cars.filter(car => car.id !== id);
+  }
+
+  // ⬇️ Új foglalás gomb eseménykezelője
+  createBooking(id: number): void {
+    console.log(`Új foglalás autó ID: ${id}`);
+    // Ide jönne az átirányítás a foglalási űrlapra
+  }
+}
+***
+
+11. CarFormComponentComponent.ts (új autó hozzáadása)
+ új autó bekerül a CarListComponentComponent.cars listájába.
+lokálisan osztjuk meg az adatot, 
+
+***
+import { Component } from '@angular/core';
+import { Car } from '../car-list-component/car-list-component.component';
+import { Router } from '@angular/router';
+
+@Component({
+  selector: 'app-car-form-component',
+  templateUrl: './car-form-component.component.html',
+  styleUrl: './car-form-component.component.css'
+})
+export class CarFormComponentComponent {
+  // Új autó alapértelmezett értékekkel
+  newCar: Car = {
+    id: 0,
+    brand: '',
+    model: '',
+    licensePlate: '',
+    year: new Date().getFullYear(),
+    dailyPrice: 0
+  };
+
+  constructor(private router: Router) {}
+
+  // Hozzáadás gomb logikája
+  addCar(): void {
+    const carList = localStorage.getItem('cars');
+    const cars: Car[] = carList ? JSON.parse(carList) : [];
+
+    // Egyedi ID generálása (egyszerű megoldásként)
+    this.newCar.id = cars.length > 0 ? Math.max(...cars.map(c => c.id)) + 1 : 1;
+
+    cars.push(this.newCar);
+    localStorage.setItem('cars', JSON.stringify(cars));
+
+    alert('Autó hozzáadva!');
+    this.router.navigate(['/']); // visszairányítás a főoldalra
+  }
+}
+
+***
+
+12.frissítsük a CarListComponentComponent-et
+hogy betöltse a localStorage-ban lévő autókat -megjelenjenek az eddigi rekordok is
+***
+ngOnInit(): void {
+  const storedCars = localStorage.getItem('cars');
+
+  if (storedCars) {
+    // Ha már vannak elmentett autók, azokat töltjük be
+    this.cars = JSON.parse(storedCars);
+  } else {
+    // Ha nincs elmentett lista, feltöltjük az alapértelmezettel
+    this.cars = [
+      { id: 1, brand: 'Toyota', model: 'Corolla', licensePlate: 'ABC-123', year: 2020, dailyPrice: 50 },
+      { id: 2, brand: 'Honda', model: 'Civic', licensePlate: 'XYZ-456', year: 2019, dailyPrice: 60 },
+      { id: 3, brand: 'Ford', model: 'Focus', licensePlate: 'LMN-789', year: 2021, dailyPrice: 55 },
+      { id: 4, brand: 'Chevrolet', model: 'Malibu', licensePlate: 'DEF-012', year: 2018, dailyPrice: 65 },
+      { id: 5, brand: 'Nissan', model: 'Altima', licensePlate: 'GHI-345', year: 2022, dailyPrice: 70 }
+    ];
+    // Mentjük az alapértelmezett listát első induláskor
+    localStorage.setItem('cars', JSON.stringify(this.cars));
+  }
+}
+  // Itt történhetne az adatok betöltése a szerverről, ha lenne backend API
+  // Például egy autókat lekérő szerviz segítségével:
+
+  // this.carService.getAllCars().subscribe((data: Car[]) => {
+  //   this.cars = data;
+  // });
+
+  // Fontos: a fenti kódhoz szükség lesz egy `CarService` osztályra és egy valódi backend végpontra is
+
+   // Egy adott autó törlése az autólista alapján
+  deleteCar(carId: number): void {
+     this.cars = this.cars.filter(car => car.id !== carId);  // tényleges törlés
+  localStorage.setItem('cars', JSON.stringify(this.cars)); // új állapot mentése
+  }
+
+  // Autó módosítása (ez most csak konzolra írja ki az ID-t)
+  editCar(carId: number): void {
+    console.log('Autó módosítása, ID:', carId);
+    // Később navigálhatunk a szerkesztő űrlaphoz
+  }
+
+  // Új foglalás indítása (csak konzolra írja ki az autó ID-ját)
+  bookCar(carId: number): void {
+    console.log('Új foglalás ehhez az autóhoz, ID:', carId);
+    // Később navigálhatunk a foglalási űrlaphoz
+}
+}
+
+****
+és a CarFormComponentComponent is
+ 
+// Hozzáadás gomb logikája
+  addCar(): void {
+  // Lekérjük a jelenlegi listát
+  const stored = localStorage.getItem('cars');
+  const cars: Car[] = stored ? JSON.parse(stored) : [];
+
+  // Új azonosító kiszámítása
+  const newId = cars.length > 0 ? Math.max(...cars.map(c => c.id)) + 1 : 1;
+
+  const carToAdd = {
+    ...this.newCar,
+    id: newId
+  };
+
+  cars.push(carToAdd); // hozzáadjuk a listához
+
+  localStorage.setItem('cars', JSON.stringify(cars)); // elmentjük
+
+  alert('Új autó sikeresen hozzáadva!');
+  this.router.navigate(['/']);
+}
+
+}
+****
+13.
+
+

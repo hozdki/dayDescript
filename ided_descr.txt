@@ -1,0 +1,208 @@
+DESKTOP_OFF
+
+1. "Create a new project" 
+2."Windows Forms App (.NET)" .NET 6/7/8
+3.Toolbox Ctrl + Alt + X./view->
+4.csv bemásolása oda \Office_Desk\Office_Desk\bin\Debug
+
+5.Felület (UI) kialakítása
+Típus		Név		Megjegyzés
+DataGridView	dataGridView1	Táblázatos adatmegjelenítés
+TextBox		txtOfficeName	Iroda neve
+DateTimePicker	dtpDatum	Dátum
+ComboBox	cmbKategoria	Költség típus
+TextBox		txtOsszeg	Összeg
+TextBox		txtMegjegyzes	Megjegyzés
+Button		btnHozzaad	"Hozzáadás" gomb
++label
+
+6.Kattints duplán az üres területre a Form1 designer ablakában
+7 COMBOBX feltöltése
+***
+ private void Form1_Load(object sender, EventArgs e)
+ {
+     cmbKategoria.Items.AddRange(new string[]
+     {
+         "Maintenance",
+         "Cleaning",
+         "Repairs",
+         "Internet",
+         "Utilities",
+         "Security",
+         "Other"
+
+     });
+***
+8. Adatok beolvasása a office_costs_2024.csv
+
+Koltseg nevű osztály létrehozása - A Form1.cs fölé -  afejléc elemei
+
+***
+public class Koltseg
+{
+    public int Id { get; set; }
+    public string OfficeName { get; set; }
+    public DateTime Datum { get; set; }
+    public string Kategoria { get; set; }
+    public decimal Osszeg { get; set; }
+    public string Megjegyzes { get; set; }
+}
+
+***
+
+9.Töltsd be a CSV-t és jelenítsd meg a DataGridView -IDE bemásolni \Office_Desk\Office_Desk\bin\Debug
+CSV fájl hozzáadása a projekthez:
+
+Visual Studio-ban a Solution Explorer-ben:
+
+Kattints jobb gombbal a projekt nevére (pl. Office_Desk).
+
+Válaszd: Add → Existing Item...
+
+
+Form1_Load metódusban
+
+***
+private void Form1_Load(object sender, EventArgs e)
+{
+    // 1. ComboBox feltöltése
+    cmbKategoria.Items.AddRange(new string[]
+    {
+        "Maintenance", "Repairs", "Insurance", "Utilities", "Other"
+    });
+
+    // 2. CSV beolvasása
+    string filePath = "office_costs_2024.csv";
+
+    if (File.Exists(filePath))
+    {
+        var lines = File.ReadAllLines(filePath, Encoding.UTF8);
+
+        for (int i = 1; i < lines.Length; i++) // első sor a fejléc
+        {
+            var parts = lines[i].Split(';');
+
+            if (parts.Length >= 6)
+            {
+                koltsegek.Add(new Koltseg
+                {
+                    Id = int.Parse(parts[0]),
+                    OfficeName = parts[1],
+                    Datum = DateTime.Parse(parts[2]),
+                    Kategoria = parts[3],
+                    Osszeg = decimal.Parse(parts[4]),
+                    Megjegyzes = parts[5]
+                });
+            }
+        }
+
+        // 3. Adatok megjelenítése a DataGridView-ben
+        dataGridView1.DataSource = null;
+        dataGridView1.DataSource = koltsegek;
+    }
+    else
+    {
+        MessageBox.Show("A fájl nem található: office_costs_2024.csv");
+    }
+}
+
+***
+10. Új karbantartási költség rögzítése az űrlapon
+
+Nevek egyezzenek!!!!
+pl.
+txtOfficeName (TextBox)
+dtpDatum (DateTimePicker)
+cmbKategoria (ComboBox)
+txtOsszeg (TextBox)
+txtMegjegyzes (TextBox)
+btnHozzaad (Button)
+
+11. btnHozzaad_Click metódus
+ Dupla kattintás a gombra 
+
+***
+private void btnHozzaad_Click(object sender, EventArgs e)
+{
+    // Ellenőrzés: üres mezők
+    if (string.IsNullOrWhiteSpace(txtOfficeName.Text) || 
+        string.IsNullOrWhiteSpace(cmbKategoria.Text) ||
+        string.IsNullOrWhiteSpace(txtOsszeg.Text))
+    {
+        MessageBox.Show("Kérlek, tölts ki minden kötelező mezőt!");
+        return;
+    }
+
+    // Összeg validálása
+    if (!decimal.TryParse(txtOsszeg.Text, out decimal osszeg))
+    {
+        MessageBox.Show("Az összeg mezőben csak szám szerepelhet!");
+        return;
+    }
+
+    // Új ID kiszámítása
+    int ujId = koltsegek.Count > 0 ? koltsegek.Max(k => k.Id) + 1 : 1;
+
+    // Új költség létrehozása
+    var ujKoltseg = new Koltsegek
+    {
+        Id = ujId,
+        OfficeName = txtOfficeName.Text,
+        Datum = dtpDatum.Value.Date,
+        Kategoria = cmbKategoria.Text,
+        Osszeg = osszeg,
+        Megjegyzes = txtMegjegyzes.Text
+    };
+
+    // Lista bővítése
+    koltsegek.Add(ujKoltseg);
+
+    // Táblázat frissítése
+    dataGridView1.DataSource = null;
+    dataGridView1.DataSource = koltsegek;
+
+    // CSV frissítése
+    MentesCsvFajlba();
+
+    // Mezők ürítése
+    txtOfficeName.Clear();
+    txtOsszeg.Clear();
+    txtMegjegyzes.Clear();
+    cmbKategoria.SelectedIndex = -1;
+}
+
+
+***
+12.  Build action & Copy to Output Directory – állítás
+Solution Explorer-ben: kattints a office_costs_2024.csv fájlra.
+
+A Properties (Tulajdonságok) ablakban állítsd be:
+
+Build Action: Content
+
+Copy to Output Directory: Copy if newer
+
+Így a fájl minden buildnél elérhető lesz futás közben a bin\Debug mappában.
+
+13. Kód a CSV mentéshez – a Form1 osztályba
+
+
+***
+private void MentesCsvFajlba()
+{
+    string filePath = "office_costs_2024.csv";
+
+    var sorok = new List<string>
+    {
+        "id;officename;datum;kategoria;osszeg;megjegyzes"
+    };
+
+    foreach (var k in koltsegek)
+    {
+        sorok.Add($"{k.Id};{k.OfficeName};{k.Datum:yyyy-MM-dd};{k.Kategoria};{k.Osszeg};{k.Megjegyzes}");
+    }
+
+    File.WriteAllLines(filePath, sorok, Encoding.UTF8);
+}
+***
+

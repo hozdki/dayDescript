@@ -1,0 +1,389 @@
+1. 	ng new OfficeSphere_gyak --standalone=false
+2.Belépni a projectbe
+(ng add @ng-bootstrap/ng-bootstrap@17.0.0)
+      ng add @ng-bootstrap/ng-bootstrap
+3. Componens létrehozása
+      ng g c OfficesLists
+4.
+      ng g c Home   
+       nyitóoldal tartalma (pl. üdvözlõ szöveg, gomb a böngészéshez, háttérkép).
+	Beállítod a routingot, hogy / (gyökér URL) ide vezessen.
+
+      ng g c Navbar 						- navigációs menü, logó, linkek 
+      ng g s Base 					-szervizek újrahasználható logikát tartalmaznak
+5. angular.json-ba -scriptsbe
+
+ "scripts": [  "node_modules/bootstrap/dist/js/bootstrap.bundle.js"]
+
+6. app.module.ts-be
+import { provideHttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+*
+providers: [provideHttpClient()],
+imports:-ba [ FormsModule- t beilleszteni
+
+7-8. app-routing.module.ts
+*
+import { HomeComponent } from './home/home.component';
+import { OfficesListsComponent } from './offices-lists/offices-lists.component';
+
+*
+const routes: Routes = [     -ba
+
+  {path:"", component:HomeComponent},
+  {path:"offices", component:OfficesListsComponent},
+];
+9. app.component.html
+
+<app-navbar></app-navbar>
+<div class="container">
+  <router-outlet></router-outlet>
+</div>
+10.navbar.component.html
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark py-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Office Sphere</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" routerLink="offices">Rent Office</a>
+          </li>
+  
+        </ul>
+        <form class="d-flex">
+          <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+11.home.component.css
+.header{
+    width:30%!important; 
+ }
+ .cim{
+     margin:0!important;
+     padding:0!important;
+     line-height: .8;
+ }
+ .green{
+     color: #72dd78 !important;
+  }
+  .lead{
+     margin-top: 2rem;
+  }
+ 
+  .box h2{
+    margin:0!important;
+  }
+ 
+  .box h2::first-letter {
+     color: #72dd78;
+     font-size: 100px;
+     font-weight: 700;
+     
+ }
+  
+ .box .lead{
+    margin-top: 0!important; 
+ }
+
+12.home.component.html
+<div class="container">
+    <div class="row my-5">
+        <div class="col-12 col-md-6 mb-3">
+            <p class="cim display-4">The Best</p> 
+            <p class="cim fw-bold display-4">Private Office Experience, Luxury in the City.</p>
+            <p class="cim green fw-bold display-4">GlobalSpaces</p>
+            <p class="d-none d-lg-block lead">
+                GlobalSpaces brings you the magic of premium private office experiences!
+                We all know the chaos that comes with crowded co-working spaces and the hassle of finding suitable meeting rooms – endless hours spent on bookings, logistics, and compromises.
+                Why not choose complete freedom and comfort instead?
+                Enjoy your own private office space with your team, clients, or partners – the true meaning of professional productivity and peace of mind.
+            </p>
+        </div>
+        <div class="col-12 col-md-6">
+            <img src="/assets/office1.jpg" class="img-fluid" alt="Office Space 1">
+        </div>
+    </div>
+
+    <div class="row my-5">
+        <div class="col-12 col-md-6 order-2 order-md-1">
+            <img src="/assets/office2.jpg" class="img-fluid" alt="Office Space 2">
+        </div>
+        <div class="box col-12 col-md-6 order-1">
+            <h2>About Us</h2>
+            <h5>GlobalSpaces – Redefining Office Rentals</h5>
+            <p class="lead">
+                GlobalSpaces embodies modern luxury and flexibility in workspace solutions.
+                Our network features meticulously selected, world-class office spaces, offering the perfect environment for daily work, corporate events, client meetings, or project collaborations.
+                Whether you're looking for a short-term spot or a long-term base, you'll find the ideal office with us – complete with personalized services, premium facilities, and professional support.
+                Experience unlimited productivity and maximum comfort with GlobalSpaces.
+            </p>
+        </div>
+    </div>
+
+    <div class="row my-5">
+        <div class="box col-12 col-md-6">
+            <h2>Offices</h2>
+            <h5>The World's Finest Offices for Your Perfect Workdays</h5>
+            <p class="lead">
+                Our collection of office spaces perfectly blends modern design and professional elegance.
+                Whether you seek sleek private offices, dynamic co-working areas, or prestigious corporate suites – we offer a wide selection to meet every business need.
+                Our offices feature the latest technology, spacious workstations, meeting rooms, relaxation zones, and premium amenities.
+                Let our expert team help you find the perfect office space to make every workday truly exceptional!
+            </p>
+        </div>
+        <div class="col-12 col-md-6">
+            <img src="/assets/office3.png" class="img-fluid" alt="Office Space 3">
+        </div>
+    </div>
+</div>
+
+13.Public könyvtárba az assets mappába bemásolja a képeket
+....
+14. base service.ts
+import { Injectable } from '@angular/core';
+*
+export class BaseService {
+  officesApi="https://p161-7ddfd-default-rtdb.europe-west1.firebasedatabase.app/offices.json"
+  constructor(private http:HttpClient) { }
+    getOffices(){
+    return this.http.get(this.officesApi)
+  }
+  postOfficeRental(body:any){
+    return this.http.post("https://localhost:7086/api/Berlesek", body)
+  }
+}
+
+14. office-list.componens.css  -beteszi a kinézettet
+.custom-day {
+    padding:0.185rem  0.25rem;
+    display: inline-block;
+height:2rem;
+width: 2rem
+}
+
+.custom-day .focused{
+background-color: rgb(114, 221, 120)
+}
+.custom-day .range,
+.custom-day .hover{
+
+background-color: rgb(114, 221, 120);
+color: white;
+}
+.custom-day .faded {
+background-color: rgb(114, 221, 120, .5)
+}
+button{
+background-color: rgb(114, 221, 120, 1)!important;
+border: 1px solid rgb(114, 221, 120)!important;
+}
+
+15.office-list.componens.ts
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, inject } from '@angular/core';
+import { NgbCalendar, NgbDate, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
+import { BaseService } from '../base.service';
+
+@Component({
+  selector: 'app-offices-lists',
+  templateUrl: './offices-lists.component.html',
+  styleUrl: './offices-lists.component.css'
+})
+export class OfficesListsComponent {
+ calendar = inject(NgbCalendar);
+  date: NgbDate | null = null;
+  hoveredDate: NgbDate | null = null;
+  fromDate: NgbDate = this.calendar.getNext(this.calendar.getToday(),'d',1);
+  toDate: NgbDate |null = this.calendar.getNext(this.fromDate, 'd', 2);
+  
+  offices:any
+  newRental:any={}
+  // rentals:any
+  error=false
+  success=false
+  errorMessage:any
+  cart:any=null
+  
+  
+  constructor(private base:BaseService){
+    this.base.getOffices().subscribe(
+      (j)=>this.offices=j
+    )
+  }
+  
+  addCart(office:any){
+    this.cart=office;  
+  }
+  
+  deleteItem(){
+    this.cart=null
+  }
+  
+    
+  postRental(){
+   const body={
+      uid:"101",
+      startDate: this.ngbDateToDateString(this.fromDate),
+      endDate: this.toDate?this.ngbDateToDateString(this.toDate):0,
+      officeId:this.cart.id,
+      dailyRate:this.cart.daily_price,
+      baseFee:this.cart.base_fee
+      }
+   
+    console.log(body)
+    this.base.postOfficeRental(body).subscribe(
+      {
+        next:(a)=>{
+          this.error=false
+          this.success=true;
+      },
+      error: (e: HttpErrorResponse) => {
+            console.log("hiba", e)
+            this.success = false;
+            this.error = true;              
+            const statusCode = e.status;      
+           
+            const serverMessage = typeof e.error === 'string'
+              ? e.error
+              : e.error?.message || 'An unknown error occurred.' 
+            this.errorMessage=serverMessage             
+      }})  
+  }
+  
+  onDateSelection(date: NgbDate) {
+    if (!this.fromDate && !this.toDate) {
+      this.fromDate = date;
+    } else if (this.fromDate && !this.toDate && date.after(this.fromDate)) {
+      this.toDate = date;
+    } else {
+      this.toDate = null;
+      this.fromDate = date;
+    }
+  }
+  
+  isHovered(date: NgbDate) {
+    return (
+      this.fromDate && !this.toDate && this.hoveredDate && date.after(this.fromDate) && date.before(this.hoveredDate)
+    );
+  }
+  
+  isInside(date: NgbDate) {
+    return this.toDate && date.after(this.fromDate) && date.before(this.toDate);
+  }
+  
+  isRange(date: NgbDate) {
+    return (
+      date.equals(this.fromDate) ||
+      (this.toDate && date.equals(this.toDate)) ||
+      this.isInside(date) ||
+      this.isHovered(date)
+    );
+  }
+  
+  ngbDateToDateString(ngbDate: NgbDateStruct): string {
+    const year = ngbDate.year;
+    const month = String(ngbDate.month).padStart(2, '0');
+    const day = String(ngbDate.day).padStart(2, '0');
+    const s= `${year}-${month}-${day}`
+    return s; 
+  }
+}
+
+15. office-lists.component.html
+<div class="container">
+        <div id="wrapper">
+          <h2 class="display-2 my-5">Office Rentals</h2>
+      
+          <div id="calendar">
+            <ngb-datepicker #dp (dateSelect)="onDateSelection($event)" [displayMonths]="1" [dayTemplate]="t" outsideDays="hidden">
+            </ngb-datepicker>
+      
+            <ng-template #t let-date let-focused="focused">
+              <span
+                class="custom-day"
+                [class.focused]="focused"
+                [class.range]="isRange(date)"
+                [class.faded]="isHovered(date) || isInside(date)"
+                (mouseenter)="hoveredDate = date"
+                (mouseleave)="hoveredDate = null"
+              >
+                {{ date.day }}
+              </span>
+            </ng-template>
+          </div>
+      
+          <div *ngIf="cart" id="cart">
+            <h4 class="mt-4">Selected Offices</h4>
+            <div class="row my-1">
+              <div class="col">{{cart.name}}</div>
+              <div class="col">{{cart.address}}</div>
+              <div class="col">{{cart.daily_price}} € / day</div>
+              <div class="col">{{cart.base_fee}} € base fee</div>
+              <div class="col">
+                <button (click)="deleteItem()" type="button" class="btn btn-primary btn-sm">Remove</button>
+              </div>
+              <div class="d-none d-md-block col"></div>
+              <div class="d-none d-md-block col"></div>
+              <div class="d-none d-md-block col"></div>
+              <div class="d-none d-md-block col"></div>
+            </div>
+            <hr>
+          </div>
+        </div>
+      
+        <div class="my-5">
+          <div *ngIf="error" class="alert alert-danger" role="alert">
+            <h3>Reservation Failed</h3>
+            <p>{{errorMessage}}</p>
+          </div>
+      
+          <div *ngIf="success" class="alert alert-success" role="alert">
+            <h3>Reservation Successful</h3>
+            <p>Wishing you a productive time!</p>
+          </div>
+        </div>
+      
+        <button type="button" (click)="postRental()" [disabled]="!cart" class="btn btn-primary my-2">Submit Reservation</button>
+      
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 my-3">
+          <div *ngFor="let office of offices" class="col">
+            <div class="card h-100">
+              <img [src]="office.image" class="card-img-top" [alt]="office.name">
+              <div class="card-body">
+                <h5 class="card-title">{{office.name}}</h5>
+                <h6 class="card-title">Address: {{office.address}}</h6>
+                <div class="row text-center mt-3">
+                  <div class="col">Area (m?)</div>
+                </div>
+                <div class="row text-center mt-1">
+                  <div class="col">{{office.area_m2}}</div>
+                </div>
+      
+                <p class="mt-3">
+                  Base Fee: {{office.base_fee}} €
+                </p>
+                <p>
+                  Daily Price: {{office.daily_price}} € / day
+                </p>
+              </div>
+              <div class="card-footer">
+                <small class="text-muted">
+                  <button (click)="addCart(office)" type="button" class="btn btn-primary">Reserve</button>
+                </small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+16. ng serve
+2
+
+

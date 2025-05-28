@@ -1,0 +1,583 @@
+Készítsünk egy Laravel Web API-t, amely:
+a foglalásokhoz rögzítendõ userId string típusú.
+Egy bérlés több ékszert is tartalmazhat, A bérlés hossza minimum 3, maximum 21 nap lehet. A bérlés lemondása csak a
+kezdete elõtt legalább 3 nappal lehetséges. A cégnek az ékszerekbõl egyenlõre csak egy darab áll rendelkezésére, ne
+engedjen átfedõ foglalást rögzíteni a rental végponton POST eseténben. Mivel a frontenden még nincs végleges
+megállapodás az üzleti logika mûködésében, a rentalitems végponton egyelõre nem szükséges az ellenõrzéssel
+foglalkoznia. A rental végponton a GET és a GET/{id} végpontok listázzák a hozzájuk tartozó ékszereket is.
+Végpontok:
+/api/rentals/ (GET, POST, DELETE)
+api/rentals/ – GET
+[
+ {
+ "id": 0,
+ "userId": "string",
+ "startDate": "2025-03-30T16:35:30.726Z",
+ "endDate": "2025-03-30T16:35:30.726Z",
+ "rentalItems": [
+ {
+ "id": 0,
+ "rentalId": 0,
+ "jewelryId": 0,
+ "dailyPrice": 0
+ }
+ ],
+ "duration": 0,
+ "totalCost": 0
+ }
+]
+api/rentals/{id} – GET
+{
+ "id": 0,
+ "userId": "string",
+ "startDate": "2025-03-30T16:37:25.613Z",
+ "endDate": "2025-03-30T16:37:25.613Z",
+ "rentalItems": [
+ {
+ "id": 0,
+ "rentalId": 0,
+ "jewelryId": 0,
+ "dailyPrice": 0
+ }
+ ],
+ "duration": 0,
+ "totalCost": 0
+}
+api/rentals – POST
+{
+ "userId": "string",
+ "startDate": "2025-03-30T16:37:25.602Z",
+ "endDate": "2025-03-30T16:37:25.603Z",
+ "rentalItems": [
+ {
+ "jewelryId": 0,
+ "dailyPrice": 0
+ }
+ ]
+}
+api/rentals/{id} – DELETE
+api/rentalitems/ (GET, POST, PUT, DELETE)
+api/rentalitems/ – GET
+[
+ {
+ "id": 0,
+ "rentalId": 0,
+ "jewelryId": 0,
+ "dailyPrice": 0
+ }
+]
+api/rentalitems/{id} – GET
+{
+ "id": 0,
+ "rentalId": 0,
+ "jewelryId": 0,
+ "dailyPrice": 0
+}
+api/rentalitems/{id} – PUT
+{
+ "id": 0,
+ "rentalId": 0,
+ "jewelryId": 0,
+ "dailyPrice": 0
+}
+api/rentalitems/{id} – DELETE
+-
+Modellek (duration, totalCost – számított mezõ):
+Rental{
+id integer($int32)
+userId* string
+minLength: 1
+startDate* string($date-time)
+endDate* string($date-time)
+rentalItems [
+nullable: true
+RentalItem{...}]
+duration integer($int32)
+readOnly: true
+totalCost number($double)
+readOnly: true
+}
+RentalItem{
+id integer($int32)
+rentalId* integer($int32)
+jewelryId* integer($int32)
+dailyPrice number($double)
+
+1. composer create-project laravel/laravel ekszerberles_api
+
+2. .env
+DB_CONNECTION=mysqlite
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=jewelry
+DB_USERNAME=root
+DB_PASSWORD=
+
+3. Generál egy titkos kulcsot (APP_KEY)
+
+php artisan key:generate
+
+4.Elsõként hozzuk létre a rentals táblát.
+
+php artisan make:migration create_rentals_table
+
+***
+public function up(): void
+    {
+        Schema::create('rentals', function (Blueprint $table) {
+        $table->id();
+        $table->string('userId'); // nincs aláhúzás (_) a mezõnévben
+        $table->date('start_date');
+        $table->date('end_date');
+        $table->timestamps();
+    } );
+    }
+
+**
+5. php artisan make:migration create_rental_items_table
+ 
+public function up(): void
+{
+    Schema::create('rental_items', function (Blueprint $table) {
+        $table->id();
+        $table->unsignedBigInteger('rental_id');
+        $table->foreign('rental_id')
+              ->references('id')
+              ->on('rentals')
+              ->onDelete('cascade');
+
+        $table->unsignedBigInteger('jewelry_id'); // ajánlott: snake_case
+        $table->decimal('daily_price', 8, 2);
+        $table->timestamps();
+    });
+}
+
+6.php artisan migrate vagy(php artisan migrate:fresh)
+
+7.php artisan make:model Rental
+
+Rental.php
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class Rental extends Model
+{
+    protected $fillable = [
+        'userId',
+        'start_date',
+        'end_date',
+    ];
+// ? számított mezõ: duration
+    protected $appends = ['duration', 'totalCost'];
+
+    // ?? Kapcsolat rental_items táblával
+    public function rentalItems(): HasMany
+    {
+        return $this->hasMany(RentalItem::class);
+    }
+
+    // ?? Számított mezõ: duration (napok száma)
+    public function getDurationAttribute(): int
+    {
+        return \Carbon\Carbon::parse($this->startDate)->diffInDays($this->end_date);
+    }
+
+    // ?? Számított mezõ: totalCost (összes napi ár * napok száma)
+    public function getTotalCostAttribute(): float
+    {
+        return $this->rentalItems->sum(function ($item) {
+            return $item->daily_price * $this->duration;
+        });
+    }
+   
+    public function items()
+{
+    return $this->hasMany(RentalItem::class);
+}
+
+}
+
+8. php artisan make:model RentalItem
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+
+class RentalItem extends Model
+{
+  protected $fillable = [
+    'rental_id',
+    'jewelry_id',
+    'daily_price',
+  ];
+  // Kapcsolat a Rental modellel
+  public function rental(): BelongsTo
+  {
+    return $this->belongsTo(Rental::class);
+  }
+    // Kapcsolat a Jewelry modellel
+    public function jewelry(): BelongsTo
+    {
+        return $this->belongsTo(Jewelry::class);
+    }
+}
+
+9. php artisan make:model Jewelry
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
+class Jewelry extends Model
+{
+    protected $fillable = [
+        'name',
+        'description',
+        'price',
+    ];
+}
+
+10. php artisan make:controller RentalController
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\Rental;
+use App\Models\RentalItem;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Carbon;
+
+class RentalController extends Controller
+{
+    // Összes bérlés lekérdezése
+    public function index()
+    {
+        return Rental::with('items')->get();
+    }
+
+    // Egy konkrét bérlés lekérdezése
+    public function show(string $id)
+    {
+        $rental = Rental::with('items')->find($id);
+
+        if (!$rental) {
+            return response()->json(['error' => 'Bérlés nem található.'], 404);
+        }
+
+        return response()->json($rental);
+    }
+
+    // Új bérlés létrehozása
+    public function store(Request $request)
+    {
+        // Alap validáció
+        $validator = Validator::make($request->all(), [
+            'userId' => 'required|string',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after:start_date',
+            'rentalItems' => 'required|array|min:1',
+            'rentalItems.*.jewelry_id' => 'required|integer',
+            'rentalItems.*.daily_price' => 'required|numeric|min:0',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        $start = Carbon::parse($request->start_date);
+        $end = Carbon::parse($request->end_date);
+        $duration = $start->diffInDays($end);
+
+        // Feltétel: minimum 3, maximum 21 nap
+        if ($duration < 3 || $duration > 21) {
+            return response()->json(['error' => 'A bérlés hossza 3 és 21 nap között lehet.'], 422);
+        }
+
+        // Átfedés ellenõrzése minden jewelry_id-re
+        foreach ($request->rentalItems as $item) {
+            $overlap = RentalItem::where('jewelry_id', $item['jewelry_id'])
+                ->whereHas('rental', function ($query) use ($start, $end) {
+                    $query->where(function ($q) use ($start, $end) {
+                        $q->whereBetween('start_date', [$start, $end])
+                          ->orWhereBetween('end_date', [$start, $end])
+                          ->orWhere(function ($q2) use ($start, $end) {
+                              $q2->where('start_date', '<', $start)
+                                 ->where('end_date', '>', $end);
+                          });
+                    });
+                })
+                ->exists();
+
+            if ($overlap) {
+                return response()->json(['error' => 'Átfedõ foglalás: az adott ékszer már le van foglalva erre az idõszakra.'], 422);
+            }
+        }
+
+        // Bérlés mentése
+        $rental = Rental::create([
+            'userId' => $request->userId,
+            'start_date' => $request->start_date,
+            'end_date' => $request->end_date,
+            'duration' => $duration,
+        ]);
+
+        // Rental items mentése
+        foreach ($request->rentalItems as $item) {
+            RentalItem::create([
+                'rental_id' => $rental->id,
+                'jewelry_id' => $item['jewelry_id'],
+                'daily_price' => $item['daily_price'],
+            ]);
+        }
+
+        return response()->json($rental->load('items'), 201);
+    }
+
+    // Bérlés módosítása (alap validációval)
+    public function update(Request $request, string $id)
+    {
+        $rental = Rental::find($id);
+
+        if (!$rental) {
+            return response()->json(['error' => 'A bérlés nem található.'], 404);
+        }
+
+        // Egyelõre csak dátumot és userId-t módosítunk (feltételek nélkül)
+        $validator = Validator::make($request->all(), [
+            'userId' => 'sometimes|required|string',
+            'start_date' => 'sometimes|required|date',
+            'end_date' => 'sometimes|required|date|after:start_date',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['error' => $validator->errors()], 422);
+        }
+
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $start = Carbon::parse($request->start_date);
+            $end = Carbon::parse($request->end_date);
+            $duration = $start->diffInDays($end);
+
+            if ($duration < 3 || $duration > 21) {
+                return response()->json(['error' => 'A bérlés hossza 3 és 21 nap között lehet.'], 422);
+            }
+
+            $rental->start_date = $request->start_date;
+            $rental->end_date = $request->end_date;
+       
+        }
+
+        if ($request->has('userId')) {
+            $rental->userId = $request->userId;
+        }
+
+        $rental->save();
+
+        return response()->json($rental);
+    }
+
+    // Bérlés törlése (csak ha legalább 3 nappal elõtte)
+    public function destroy(string $id)
+    {
+        $rental = Rental::find($id);
+
+        if (!$rental) {
+            return response()->json(['error' => 'A megadott bérlés nem található.'], 404);
+        }
+
+        $now = Carbon::now();
+        $start = Carbon::parse($rental->start_date);
+
+        // Feltétel: lemondás legalább 3 nappal elõtte
+        if ($start->diffInDays($now, false) < 3) {
+            return response()->json(['error' => 'A bérlés csak legalább 3 nappal a kezdete elõtt törölhetõ.'], 403);
+        }
+
+        $rental->delete();
+
+        return response()->json(['message' => 'A bérlés sikeresen törölve lett.']);
+    }
+}
+
+
+
+11. php artisan make:controller RentalItemController
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\RentalItem;
+use Illuminate\Http\Request;
+
+class RentalItemController extends Controller
+{
+    // RentalItem-ek listázása (opcionálisan szûrés rental_id szerint)
+    public function index(Request $request)
+    {
+        if ($request->has('rental_id')) {
+            return RentalItem::where('rental_id', $request->rental_id)->get();
+        }
+
+        return RentalItem::all();
+    }
+
+    // Új rental item létrehozása
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'rental_id' => 'required|exists:rentals,id',
+            'jewelryId' => 'required|integer',
+            'daily_price' => 'required|numeric|min:0',
+        ]);
+
+        $item = RentalItem::create($validated);
+
+        return response()->json($item, 201);
+    }
+
+    // Egy rental item lekérdezése
+    public function show($id)
+    {
+        return RentalItem::findOrFail($id);
+    }
+
+    // Rental item frissítése
+    public function update(Request $request, $id)
+    {
+        $item = RentalItem::findOrFail($id);
+
+        $item->update($request->only(['jewelryId', 'daily_price']));
+
+        return response()->json($item);
+    }
+
+    // Rental item törlése
+    public function destroy($id)
+    {
+        RentalItem::destroy($id);
+        return response()->noContent();
+    }
+}
+
+
+
+
+12. Routes
+bootstrap/app.php!!!
+
+api: __DIR__.’/../routes/api.php’,
+
+13.api.php – létrehozni
+
+<?php
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RentalController;
+use App\Http\Controllers\RentalItemController;
+
+
+
+Route::get('/rentals', [RentalController::class, 'index']);         // Összes bérlés
+Route::post('/rentals', [RentalController::class, 'store']);        // Új bérlés létrehozása
+Route::get('/rentals/{id}', [RentalController::class, 'show']);     // Egy adott bérlés
+Route::put('/rentals/{id}', [RentalController::class, 'update']);   // Bérlés módosítása
+Route::delete('/rentals/{id}', [RentalController::class, 'destroy']); // Bérlés törlése
+
+// RentalItem végpontok
+Route::get('/rental-items', [RentalItemController::class, 'index']); // ?rental_id=1 szûréshez
+Route::post('/rental-items', [RentalItemController::class, 'store']);
+Route::get('/rental-items/{id}', [RentalItemController::class, 'show']);
+Route::put('/rental-items/{id}', [RentalItemController::class, 'update']);
+Route::delete('/rental-items/{id}', [RentalItemController::class, 'destroy']);
+
+
+
+
++-----------------------------+--------+-------------------------------------+-----------------------------+
+|           MÛVELET          | METHOD |               ÚTVONAL               |          MEGJEGYZÉS         |
++-----------------------------+--------+-------------------------------------+-----------------------------+
+| Összes bérlés lekérése     | GET    | /api/rentals                        | Minden rental               |
+| Új bérlés létrehozása      | POST   | /api/rentals                        | Új rental mentése           |
+| Egy bérlés lekérése        | GET    | /api/rentals/{id}                  | ID alapján                   |
+| Bérlés frissítése          | PUT    | /api/rentals/{id}                  | ID alapján                   |
+| Bérlés törlése             | DELETE | /api/rentals/{id}                  | ID alapján                   |
++-----------------------------+--------+-------------------------------------+-----------------------------+
+| Összes rental item lekérése| GET    | /api/rental-items                  | Minden rental item          |
+| Új rental item létrehozása | POST   | /api/rental-items                  | Új rental item              |
+| Egy rental item lekérése   | GET    | /api/rental-items/{id}            | ID alapján                   |
+| Rental item frissítése     | PUT    | /api/rental-items/{id}            | ID alapján                   |
+| Rental item törlése        | DELETE | /api/rental-items/{id}            | ID alapján                   |
++-----------------------------+--------+-------------------------------------+-----------------------------+
+
+
+
+
+
+
+
+POST POST   | /api/rentals                        | Új rental mentése           
+
+{
+  "userId": "abc123",
+  "start_date": "2025-06-01",
+  "end_date": "2025-06-05",
+  "rentalItems": [
+    {
+      "jewelry_id": 1,
+      "daily_price": 120.50
+    },
+    {
+      "jewelry_id": 2,
+      "daily_price": 85.75
+    }
+  ]
+}
+
+update PUT
+  "userId": "abc123",
+  "start_date": "2025-06-01",
+  "end_date": "2025-06-05",
+  "rentalItems": [
+    {
+      "jewelry_id":3,
+      "daily_price": 120.50
+    }
+   ]
+}
+
+add berles
+{
+  "userId": "abc123",
+  "start_date": "2025-06-01",
+  "end_date": "2025-06-05",
+  "rentalItems": [
+    {
+      "jewelry_id": 3,
+      "daily_price": 120.50
+    }
+   ]
+}
+
+rentalItems Add
+{
+  "userId": "abc123",
+  "start_date": "2025-07-01",
+  "end_date": "2025-07-10",
+  "rentalItems": [
+    {
+      "jewelry_id": 1,
+      "daily_price": 150.00
+    },
+    {
+      "jewelry_id": 2,
+      "daily_price": 180.50
+    }
+  ]
+}

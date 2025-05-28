@@ -1,0 +1,196 @@
+DESKTOP_EKSZER
+
+1. "Create a new project" 
+2."Windows Forms App (.NET)" .NET 6/7/8
+3.Toolbox Ctrl + Alt + X./view->
+4.csv bemásolása oda \Office_Desk\Office_Desk\bin\Debug
+5. Hozzunk létre egy Restauralas.cs fájlt, Add Class
+public class Restauralas
+{
+    public int Id { get; set; }
+    public string PaintingId { get; set; } = string.Empty;
+    public DateTime Datum { get; set; }
+    public string Muvelet { get; set; } = string.Empty;
+    public string Megjegyzes { get; set; } = string.Empty;
+}
+
+
+6. fájlbeolvasást megírr Form1.cs
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Data;
+using System.Drawing;
+using System.Globalization;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using System.Windows.Forms;
+using System.IO;
+
+namespace RestauralasApp
+{
+
+    public partial class Form1 : Form
+    {
+        private List<Restauralas> restauralasok = new();
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            string path = "restauralasok.csv";
+            if (File.Exists(path))
+            {
+                var lines = File.ReadAllLines(path).Skip(1); // fejléc kihagyása
+                foreach (var line in lines)
+                {
+                    var parts = line.Split(';');
+                    if (parts.Length == 5)
+                    {
+                        restauralasok.Add(new Restauralas
+                        {
+                            Id = int.Parse(parts[0]),
+                            PaintingId = parts[1],
+                            Datum = DateTime.Parse(parts[2], new CultureInfo("hu-HU")),
+                            Muvelet = parts[3],
+                            Megjegyzes = parts[4]
+                        });
+                    }
+                }
+            }
+
+            dataGridView1.DataSource = new BindingSource { DataSource = restauralasok };
+        }
+    }
+}
+
+7. Ûrlap felépítése
+
+DataGridView ? Name = dataGridView1
+ 4 TextBox:
+* textBoxPaintingId
+* textBoxMuvelet
+* textBoxMegjegyzes
+DateTimePicker: dateTimePickerDatum
+Button: buttonHozzaad (Text: „Hozzáadás”)
+
+8.
+VezérlõNévEgyébDataGridViewdataGridView1Dock: Top vagy FillTextBoxtextBoxPaintingIdDateTimePickerdateTimePickerDatumTextBoxtextBoxMuveletTextBoxtextBoxMegjegyzesButtonbuttonHozzaadText: „Hozzáadás”
+
+9. Form1_Load esemény hozzárendelése
+Ez akkor kell, ha a Form1_Load metódusod nem fut le induláskor.
+Lépések:
+1. Nyisd meg a Form1.cs [Design] nézetet (dupla kattintás a Form1.cs fájlra a Solution Explorerben).
+2. Kattints üres területre az ûrlapon (ne egy vezérlõre).
+3. Jobb oldalon nyisd meg a Properties ablakot (ha nem látod: View ? Properties Window vagy F4 billentyû).
+4. Kattints a villám ikonra (Események).
+5. Keresd meg a Load eseményt.
+6. Írd be vagy válaszd ki a listából:
+
+10. buttonHozzaad_Click hozzárendelése
+Ez akkor kell, ha duplakatt után véletlenül buttonHozzaad_Click_1 lett az esemény neve.
+Lépések:
+1. Design nézetben kattints a Hozzáadás gombra.
+2. A jobb oldali Properties ablakban kattints a villám ikonra.
+3. Keresd meg a Click eseményt.
+4.  (buttonHozzaad_Click_1), és írd be: buttonHozzaad_Click
+
+
+TELJES CODE
+FORM1
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Windows.Forms;
+
+namespace RestauralasApp
+{
+    public partial class Form1 : Form
+    {
+        private List<Restauralas> restauralasok = new List<Restauralas>();
+
+        public Form1()
+        {
+            InitializeComponent();
+        }
+
+        private void Form1_Load(object sender, EventArgs e)
+        {
+            string path = "restauralasok.csv";
+            if (File.Exists(path))
+            {
+                var lines = File.ReadAllLines(path).Skip(1);
+                foreach (var line in lines)
+                {
+                    var parts = line.Split(';');
+                    if (parts.Length == 5)
+                    {
+                        restauralasok.Add(new Restauralas
+                        {
+                            Id = int.Parse(parts[0]),
+                            PaintingId = parts[1],
+                            Datum = DateTime.Parse(parts[2], new CultureInfo("hu-HU")),
+                            Muvelet = parts[3],
+                            Megjegyzes = parts[4]
+                        });
+                    }
+                }
+            }
+
+            dataGridView1.DataSource = new BindingSource { DataSource = restauralasok };
+        }
+
+        
+
+        private void MentesCsvFajlba()
+        {
+            string path = "restauralasok.csv";
+            using (var writer = new StreamWriter(path, false, Encoding.UTF8))
+            {
+                writer.WriteLine("id;paintingid;datum;muvelet;megjegyzes");
+                foreach (var r in restauralasok)
+                {
+                    writer.WriteLine($"{r.Id};{r.PaintingId};{r.Datum:yyyy.MM.dd};{r.Muvelet};{r.Megjegyzes}");
+                }
+            }
+        }
+
+        private void buttonHozzaad_Click_1(object sender, EventArgs e)
+        {
+
+        }
+
+        private void buttonHozzaad_Click(object sender, EventArgs e)
+        {
+
+        }
+    }
+}
+
+Restauralas.cs
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace RestauralasApp
+{
+    public class Restauralas
+    {
+        public int Id { get; set; }
+        public string PaintingId { get; set; } = string.Empty;
+        public DateTime Datum { get; set; }
+        public string Muvelet { get; set; } = string.Empty;
+        public string Megjegyzes { get; set; } = string.Empty;
+    }
+
+}

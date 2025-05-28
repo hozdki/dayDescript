@@ -1,0 +1,387 @@
+FestFront
+1. 	ng new Ekszer --standalone=false
+2.Belépni a projectbe
+(ng add @ng-bootstrap/ng-bootstrap@17.0.0)
+      ng add @ng-bootstrap/ng-bootstrap
+3. Componens létrehozása
+      ng g c EkszerLists
+4.
+      ng g c Home   
+       nyitóoldal tartalma (pl. üdvözlõ szöveg, gomb a böngészéshez, háttérkép).
+	Beállítod a routingot, hogy / (gyökér URL) ide vezessen.
+
+      ng g c Navbar 						- navigációs menü, logó, linkek 
+      ng g s Base 					-szervizek újrahasználható logikát tartalmaznak
+5. angular.json-ba -scriptsbe
+
+ "scripts": [  "node_modules/bootstrap/dist/js/bootstrap.bundle.js"]
+
+6. app.module.ts-be
+import { provideHttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+*
+providers: [provideHttpClient()],
+imports:-ba [ FormsModule- t beilleszteni
+
+7-8. app-routing.module.ts
+*
+import { HomeComponent } from './home/home.component';
+import { EkszerListsComponent } from './ekszer-lists/ekszer-lists.component';
+
+*
+const routes: Routes = [     -ba
+
+    {path: '', component: HomeComponent},
+  {path: 'ekszer-lists', component: EkszerListsComponent},];
+
+9. app.component.html
+
+<app-navbar></app-navbar>
+<div class="container">
+  <router-outlet></router-outlet>
+</div>
+
+10.navbar.component.html
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark py-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Luxury</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" routerLink="ekszer-lists">Nõi ékszer</a>
+          </li>
+         <li class="nav-item">
+            <a class="nav-link active" aria-current="page" routerLink="ekszer-lists">Férfi ékszer</a>
+          </li>
+            <li class="nav-item">
+                <a class="nav-link active" aria-current="page" routerLink="ekszer-lists">Gyerek ékszer</a>
+  
+        </ul>
+        <form class="d-flex">
+          <input class="form-control me-2" type="search" placeholder="Keresés" aria-label="Search">
+          <button class="btn btn-outline-success" type="submit">Keresõ</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+11.home.component.css
+.header{
+    width:30%!important; 
+ }
+ .cim{
+     margin:0!important;
+     padding:0!important;
+     line-height: .8;
+ }
+ .green{
+     color: #72dd78 !important;
+  }
+  .lead{
+     margin-top: 2rem;
+  }
+ 
+  .box h2{
+    margin:0!important;
+  }
+ 
+  .box h2::first-letter {
+     color: #72dd78;
+     font-size: 100px;
+     font-weight: 700;
+     
+ }
+  
+ .box .lead{
+    margin-top: 0!important; 
+ }
+
+.overlay-image {
+  position: absolute;
+  top: 30;
+  right:0;
+  z-index: -1; /* Szöveg alá kerül */
+  width: 100%;
+  max-width: 6000px; /* vagy amit szeretnél */
+  opacity: 0.7; /* ha halványítani szeretnéd */
+}
+12.home.component.html
+<div class="container">
+    <div class="row my-5">
+        <div class="col-12 col-md-6 mb-3">
+            <p class="cim display-4">A LEGJOBB</p> 
+            <p class="cim fw-bold display-4">Uj kollekció</p>
+            <p class="cim green fw-bold display-4">Luxury ékszerek</p>
+            <p class="d-none d-lg-block lead">
+                Lorem ipsum dolor sit amet consec tetur adipiscing elit elit at
+felis lacinia nec et est aptent taciti sociosqu ad litora torquent
+per conubia nostra per inceptos himenaeos. Donec sed odio dui.
+Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis 
+dis parturient montes, nascetur ridiculus mus. Donec sed odio dui.
+        
+            </p>
+            <h2>Rólunk</h2>
+            <p class="d-none d-lg-block lead">
+                Lorem ipsum dolor sit amet consec tetur adipiscing elit elit at
+felis lacinia nec et est aptent taciti sociosqu ad litora torquent
+per conubia nostra per inceptos himenaeos. Donec sed odio dui.
+Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis 
+dis parturient montes, nascetur ridiculus mus. Donec sed odio dui.
+        <h3>Ékszerek</h3>
+            <p class="d-none d-lg-block lead">
+                Lorem ipsum dolor sit amet consec tetur adipiscing elit elit at
+felis lacinia nec et est aptent taciti sociosqu ad litora torquent
+per conubia nostra per inceptos himenaeos. Donec sed odio dui.
+Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis 
+dis parturient montes, nascetur ridiculus mus. Donec sed odio dui.
+
+            </p>
+        </div>
+        <div class="img-fluid overlay-image">
+            <img src="/assets/slider1.jpg" class="img-fluid" alt="gyûrû">
+        </div>
+    </div>
+</div>
+
+13.Public könyvtárba az assets mappába bemásolja a képeket
+....
+14. base service.ts
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class BaseService {
+ekszerekApi="https://webshop-9badc-default-rtdb.europe-west1.firebasedatabase.app/jewelry.json";
+
+   constructor(private http:HttpClient) { }
+
+   getEkszerek() {
+    return this.http.get(this.ekszerekApi);  
+}
+postEkszerRental(body:any) {
+  return this.http.post("https:localhost:4200/api/Ekszer", body);
+}
+}
+
+15. ekszer-list.componens.css  
+
+.custom-day {
+    padding:0.185rem  0.25rem;
+    display: inline-block;
+height:2rem;
+width: 2rem
+}
+
+.custom-day .focused{
+background-color: rgb(114, 221, 120)
+}
+.custom-day .range,
+.custom-day .hover{
+
+background-color: rgb(114, 221, 120);
+color: white;
+}
+.custom-day .faded {
+background-color: rgb(114, 221, 120, .5)
+}
+button{
+background-color: rgb(114, 221, 120, 1)!important;
+border: 1px solid rgb(114, 221, 120)!important;
+}
+
+
+
+
+16.ekszer-lists.component.ts
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, inject } from '@angular/core';
+import { NgbCalendar, NgbDate, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
+import { BaseService } from '../base.service';
+
+@Component({
+  selector: 'app-ekszer-lists',
+  templateUrl: './ekszer-lists.component.html',
+  styleUrls: ['./ekszer-lists.component.css']
+})
+export class EkszerListsComponent {
+  calendar = inject(NgbCalendar);
+  date: NgbDate | null = null;
+  hoveredDate: NgbDate | null = null;
+  fromDate: NgbDate = this.calendar.getNext(this.calendar.getToday(), 'd', 1);
+  toDate: NgbDate | null = this.calendar.getNext(this.fromDate, 'd', 2);
+
+  ekszerek: any;
+  newRental: any = {};
+  error = false;
+  success = false;
+  errorMessage: any;
+  ekszer: any = null;
+
+  constructor(private base: BaseService) {
+    this.base.getEkszerek().subscribe(
+      (data) => this.ekszerek = data
+    );
+  }
+
+  addCart(ekszerElem: any) {
+    this.ekszer = ekszerElem;
+  }
+
+  deleteItem() {
+    this.ekszer = null;
+  }
+
+  postRental() {
+    const body = {
+      uid: "101",
+      startDate: this.ngbDateToDateString(this.fromDate),
+      endDate: this.toDate ? this.ngbDateToDateString(this.toDate) : 0,
+      ekszerId: this.ekszer.id,
+      dailyRate: this.ekszer.daily_price,
+      deposit: this.ekszer.deposit
+    };
+
+    console.log(body);
+    this.base.postEkszerRental(body).subscribe({
+      next: () => {
+        this.error = false;
+        this.success = true;
+      },
+      error: (e: HttpErrorResponse) => {
+        console.log("Hiba történt", e);
+        this.success = false;
+        this.error = true;
+        const serverMessage = typeof e.error === 'string'
+          ? e.error
+          : e.error?.message || 'Ismeretlen hiba történt.';
+        this.errorMessage = serverMessage;
+      }
+    });
+  }
+
+  onDateSelection(date: NgbDate) {
+    if (!this.fromDate && !this.toDate) {
+      this.fromDate = date;
+    } else if (this.fromDate && !this.toDate && date.after(this.fromDate)) {
+      this.toDate = date;
+    } else {
+      this.toDate = null;
+      this.fromDate = date;
+    }
+  }
+
+  isHovered(date: NgbDate) {
+    return (
+      this.fromDate &&
+      !this.toDate &&
+      this.hoveredDate &&
+      date.after(this.fromDate) &&
+      date.before(this.hoveredDate)
+    );
+  }
+
+  isInside(date: NgbDate) {
+    return this.toDate && date.after(this.fromDate) && date.before(this.toDate);
+  }
+
+  isRange(date: NgbDate) {
+    return (
+      date.equals(this.fromDate) ||
+      (this.toDate && date.equals(this.toDate)) ||
+      this.isInside(date) ||
+      this.isHovered(date)
+    );
+  }
+
+  ngbDateToDateString(ngbDate: NgbDateStruct): string {
+    const year = ngbDate.year;
+    const month = String(ngbDate.month).padStart(2, '0');
+    const day = String(ngbDate.day).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+}
+
+
+17. ekszer-lists.component.html
+
+<div class="container">
+  <div id="wrapper">
+    <h2 class="display-2 my-5">Ékszer Bérlés</h2>
+
+    <div id="calendar">
+      <ngb-datepicker #dp (dateSelect)="onDateSelection($event)" [displayMonths]="1" [dayTemplate]="t" outsideDays="hidden">
+      </ngb-datepicker>
+
+      <ng-template #t let-date let-focused="focused">
+        <span
+          class="custom-day"
+          [class.focused]="focused"
+          [class.range]="isRange(date)"
+          [class.faded]="isHovered(date) || isInside(date)"
+          (mouseenter)="hoveredDate = date"
+          (mouseleave)="hoveredDate = null"
+        >
+          {{ date.day }}
+        </span>
+      </ng-template>
+    </div>
+
+    <div *ngIf="ekszer" id="selected">
+      <h4 class="mt-4">Kiválasztott Ékszer</h4>
+      <div class="row my-1">
+        <div class="col">{{ekszer.title}}</div>
+        <div class="col">{{ekszer.artist}}</div>
+        <div class="col">{{ekszer.daily_price}} Ft / nap</div>
+        <div class="col">{{ekszer.deposit}} Ft kaució</div>
+        <div class="col">
+          <button (click)="deleteItem()" type="button" class="btn btn-primary btn-sm">Eltávolítás</button>
+        </div>
+      </div>
+      <hr>
+    </div>
+  </div>
+
+  <div class="my-5">
+    <div *ngIf="error" class="alert alert-danger" role="alert">
+      <h3>Foglalás sikertelen</h3>
+      <p>{{errorMessage}}</p>
+    </div>
+
+    <div *ngIf="success" class="alert alert-success" role="alert">
+      <h3>Foglalás sikeres</h3>
+      <p>Használja egészséggel!</p>
+    </div>
+  </div>
+
+  <button type="button" (click)="postRental()" [disabled]="!ekszer" class="btn btn-primary my-2">
+    Foglalás elküldése
+  </button>
+
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 my-3">
+    <div *ngFor="let ekszerElem of ekszerek" class="col">
+      <div class="card h-100">
+        <img [src]="ekszerElem.image" class="card-img-top" [alt]="ekszerElem.title">
+        <div class="card-body">
+          <h5 class="card-title">{{ekszerElem.title}}</h5>
+          <h6 class="card-subtitle text-muted mb-2">Készítõ: {{ekszerElem.artist}}</h6>
+          <p class="card-text">{{ekszerElem.description}}</p>
+          <p>Kaució: {{ekszerElem.deposit}} Ft</p>
+          <p>Napi díj: {{ekszerElem.daily_price}} Ft / nap</p>
+        </div>
+        <div class="card-footer">
+          <small class="text-muted">
+            <button (click)="addCart(ekszerElem)" type="button" class="btn btn-primary">Kiválasztás</button>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+

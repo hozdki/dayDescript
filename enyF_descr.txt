@@ -1,0 +1,372 @@
+FestFront
+1. 	ng new Paintings --standalone=false
+2.Belépni a projectbe
+(ng add @ng-bootstrap/ng-bootstrap@17.0.0)
+      ng add @ng-bootstrap/ng-bootstrap
+3. Componens létrehozása
+      ng g c PaintingsLists
+4.
+      ng g c Home   
+       nyitóoldal tartalma (pl. üdvözlõ szöveg, gomb a böngészéshez, háttérkép).
+	Beállítod a routingot, hogy / (gyökér URL) ide vezessen.
+
+      ng g c Navbar 						- navigációs menü, logó, linkek 
+      ng g s Base 					-szervizek újrahasználható logikát tartalmaznak
+5. angular.json-ba -scriptsbe
+
+ "scripts": [  "node_modules/bootstrap/dist/js/bootstrap.bundle.js"]
+
+6. app.module.ts-be
+import { provideHttpClient } from '@angular/common/http';
+import { FormsModule } from '@angular/forms';
+*
+providers: [provideHttpClient()],
+imports:-ba [ FormsModule- t beilleszteni
+
+7-8. app-routing.module.ts
+*
+import { HomeComponent } from './home/home.component';
+import { PaintingsListsComponent } from './paintings-lists/paintings-lists.component';
+
+*
+const routes: Routes = [     -ba
+
+  {path:"", component:HomeComponent},
+  {path:"offices", component: PaintingsListsComponent},
+];
+9. app.component.html
+
+<app-navbar></app-navbar>
+<div class="container">
+  <router-outlet></router-outlet>
+</div>
+
+10.navbar.component.html
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark py-4">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#">Dávid Galéria</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" routerLink="paintings">Festménybérlés</a>
+          </li>
+  
+        </ul>
+        <form class="d-flex">
+          <input class="form-control me-2" type="search" placeholder="Keresés" aria-label="Search">
+          <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+      </div>
+    </div>
+  </nav>
+
+11.home.component.css
+.header{
+    width:30%!important; 
+ }
+ .cim{
+     margin:0!important;
+     padding:0!important;
+     line-height: .8;
+ }
+ .green{
+     color: #72dd78 !important;
+  }
+  .lead{
+     margin-top: 2rem;
+  }
+ 
+  .box h2{
+    margin:0!important;
+  }
+ 
+  .box h2::first-letter {
+     color: #72dd78;
+     font-size: 100px;
+     font-weight: 700;
+     
+ }
+  
+ .box .lead{
+    margin-top: 0!important; 
+ }
+
+12.home.component.html
+<div class="container">
+    <div class="row my-5">
+        <div class="col-12 col-md-6 mb-3">
+            <p class="cim display-4">A LEGJOBB</p> 
+            <p class="cim fw-bold display-4">Az ELEGÁNSTÓL a LUXUSIG</p>
+            <p class="cim green fw-bold display-4">Dávid Galéria</p>
+            <p class="d-none d-lg-block lead">
+                Lorem ipsum dolor sit amet consec tetur adipiscing elit elit at
+felis lacinia nec et est aptent taciti sociosqu ad litora torquent
+per conubia nostra per inceptos himenaeos. Donec sed odio dui.
+Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis 
+dis parturient montes, nascetur ridiculus mus. Donec sed odio dui.
+        
+            </p>
+            <h2>Rólunk</h2>
+            <p class="d-none d-lg-block lead">
+                Lorem ipsum dolor sit amet consec tetur adipiscing elit elit at
+felis lacinia nec et est aptent taciti sociosqu ad litora torquent
+per conubia nostra per inceptos himenaeos. Donec sed odio dui.
+Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis 
+dis parturient montes, nascetur ridiculus mus. Donec sed odio dui.
+        <h3>Festmények</h3>
+            <p class="d-none d-lg-block lead">
+                Lorem ipsum dolor sit amet consec tetur adipiscing elit elit at
+felis lacinia nec et est aptent taciti sociosqu ad litora torquent
+per conubia nostra per inceptos himenaeos. Donec sed odio dui.
+Nullam quis risus eget urna mollis ornare vel eu leo. Cum sociis natoque penatibus et magnis 
+dis parturient montes, nascetur ridiculus mus. Donec sed odio dui.
+            </p>
+        </div>
+        <div class="col-12 col-md-6">
+            <img src="/assets/header.jpg" class="img-fluid" alt="páva">
+        </div>
+    </div>
+</div>
+
+
+
+13.Public könyvtárba az assets mappába bemásolja a képeket
+....
+14. base service.ts
+import { HttpClient } from '@angular/common/http';
+import { Injectable } from '@angular/core';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class BaseService {
+paintingsApi="https://p161-7ddfd-default-rtdb.europe-west1.firebasedatabase.app/paintings.json";
+
+   constructor(private http:HttpClient) { }
+
+   getPaintings() {
+    return this.http.get(this.paintingsApi);  
+}
+postPaintingRental(body:any) {
+  return this.http.post("https:localhost:4200/api/Paintings", body);
+}
+}
+15. painting-list.componens.css  
+
+.custom-day {
+    padding:0.185rem  0.25rem;
+    display: inline-block;
+height:2rem;
+width: 2rem
+}
+
+.custom-day .focused{
+background-color: rgb(114, 221, 120)
+}
+.custom-day .range,
+.custom-day .hover{
+
+background-color: rgb(114, 221, 120);
+color: white;
+}
+.custom-day .faded {
+background-color: rgb(114, 221, 120, .5)
+}
+button{
+background-color: rgb(114, 221, 120, 1)!important;
+border: 1px solid rgb(114, 221, 120)!important;
+}
+
+
+16.paintings-lists.component.ts
+import { HttpErrorResponse } from '@angular/common/http';
+import { Component, inject } from '@angular/core';
+import { NgbCalendar, NgbDate, NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
+import { BaseService } from '../base.service';
+
+@Component({
+  selector: 'app-paintings-lists',
+  templateUrl: './paintings-lists.component.html',
+  styleUrl: './paintings-lists.component.css'
+})
+export class PaintingsListsComponent {
+ calendar = inject(NgbCalendar);
+  date: NgbDate | null = null;
+  hoveredDate: NgbDate | null = null;
+  fromDate: NgbDate = this.calendar.getNext(this.calendar.getToday(),'d',1);
+  toDate: NgbDate |null = this.calendar.getNext(this.fromDate, 'd', 2);
+  
+  paintings:any
+  newRental:any={}
+  // rentals:any
+  error=false
+  success=false
+  errorMessage:any
+  cart:any=null
+  
+  
+  constructor(private base:BaseService){
+    this.base.getPaintings().subscribe(
+      (j)=>this.paintings=j
+    )
+  }
+  
+  addCart(painting:any){
+    this.cart=painting;  
+  }
+  
+  deleteItem(){
+    this.cart=null
+  }
+  
+    
+  postRental() {
+  const body = {
+    uid: "101",
+    startDate: this.ngbDateToDateString(this.fromDate),
+    endDate: this.toDate ? this.ngbDateToDateString(this.toDate) : 0,
+    paintingId: this.cart.id, // officeId helyett
+    dailyRate: this.cart.daily_price,
+    deposit: this.cart.deposit
+  };
+
+  console.log(body);
+  this.base.postPaintingRental(body).subscribe({
+    next: (a) => {
+      this.error = false;
+      this.success = true;
+    },
+    error: (e: HttpErrorResponse) => {
+      console.log("hiba", e);
+      this.success = false;
+      this.error = true;
+      const serverMessage = typeof e.error === 'string'
+        ? e.error
+        : e.error?.message || 'An unknown error occurred.';
+      this.errorMessage = serverMessage;
+    }
+  });
+}
+
+  onDateSelection(date: NgbDate) {
+    if (!this.fromDate && !this.toDate) {
+      this.fromDate = date;
+    } else if (this.fromDate && !this.toDate && date.after(this.fromDate)) {
+      this.toDate = date;
+    } else {
+      this.toDate = null;
+      this.fromDate = date;
+    }
+  }
+  
+  isHovered(date: NgbDate) {
+    return (
+      this.fromDate && !this.toDate && this.hoveredDate && date.after(this.fromDate) && date.before(this.hoveredDate)
+    );
+  }
+    isInside(date: NgbDate) {
+    return this.toDate && date.after(this.fromDate) && date.before(this.toDate);
+  }
+  
+  isRange(date: NgbDate) {
+    return (
+      date.equals(this.fromDate) ||
+      (this.toDate && date.equals(this.toDate)) ||
+      this.isInside(date) ||
+      this.isHovered(date)
+    );
+  }
+  
+  ngbDateToDateString(ngbDate: NgbDateStruct): string {
+    const year = ngbDate.year;
+    const month = String(ngbDate.month).padStart(2, '0');
+    const day = String(ngbDate.day).padStart(2, '0');
+    const s= `${year}-${month}-${day}`
+    return s; 
+  }
+}
+
+17. paintings-lists.component.html
+<div class="container">
+  <div id="wrapper">
+    <h2 class="display-2 my-5">Painting Rentals</h2>
+
+    <div id="calendar">
+      <ngb-datepicker #dp (dateSelect)="onDateSelection($event)" [displayMonths]="1" [dayTemplate]="t" outsideDays="hidden">
+      </ngb-datepicker>
+
+      <ng-template #t let-date let-focused="focused">
+        <span
+          class="custom-day"
+          [class.focused]="focused"
+          [class.range]="isRange(date)"
+          [class.faded]="isHovered(date) || isInside(date)"
+          (mouseenter)="hoveredDate = date"
+          (mouseleave)="hoveredDate = null"
+        >
+          {{ date.day }}
+        </span>
+      </ng-template>
+    </div>
+
+    <div *ngIf="cart" id="cart">
+      <h4 class="mt-4">Selected Painting</h4>
+      <div class="row my-1">
+        <div class="col">{{cart.title}}</div>
+        <div class="col">{{cart.artist}}</div>
+        <div class="col">{{cart.daily_price}} Ft / nap</div>
+        <div class="col">{{cart.deposit}} Ft kaució</div>
+        <div class="col">
+          <button (click)="deleteItem()" type="button" class="btn btn-primary btn-sm">Remove</button>
+        </div>
+      </div>
+      <hr>
+    </div>
+  </div>
+
+  <div class="my-5">
+    <div *ngIf="error" class="alert alert-danger" role="alert">
+      <h3>Reservation Failed</h3>
+      <p>{{errorMessage}}</p>
+    </div>
+
+    <div *ngIf="success" class="alert alert-success" role="alert">
+      <h3>Reservation Successful</h3>
+      <p>Wishing you a productive time!</p>
+    </div>
+  </div>
+
+  <button type="button" (click)="postRental()" [disabled]="!cart" class="btn btn-primary my-2">
+    Submit Reservation
+  </button>
+
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 my-3">
+    <div *ngFor="let painting of paintings" class="col">
+      <div class="card h-100">
+        <img [src]="painting.image" class="card-img-top" [alt]="painting.title">
+        <div class="card-body">
+          <h5 class="card-title">{{painting.title}}</h5>
+          <h6 class="card-subtitle text-muted mb-2">Artist: {{painting.artist}}</h6>
+          <p class="card-text">{{painting.description}}</p>
+          <p>Deposit: {{painting.deposit}} Ft</p>
+          <p>Daily Price: {{painting.daily_price}} Ft / nap</p>
+        </div>
+        <div class="card-footer">
+          <small class="text-muted">
+            <button (click)="addCart(painting)" type="button" class="btn btn-primary">Reserve</button>
+          </small>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
